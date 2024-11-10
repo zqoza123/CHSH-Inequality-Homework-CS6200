@@ -120,22 +120,40 @@ print(f"Using backend: {backend_name} with {num_qubits} qubits.")
 # Create a combined circuit that runs all 4 experiments simultaneously
 circ_combined = QuantumCircuit()
 
-i = 0
-for j, view in enumerate(views):
-    # Custom classical register name for each experiment
-    circuit = MeasureWithView(BellCircuit('q' + view, 'c' + view), view)
-    circ_combined.add_register(circuit.qregs[0])
-    circ_combined.add_register(circuit.cregs[0])
-    circ_combined.compose(
-        circuit,
-        qubits=range(i, i + circuit.num_qubits),
-        clbits=range(i, i + circuit.num_clbits),
-        inplace=True
-    )
-    i += circuit.num_qubits
+# In a similar manner, create an even wider circuit using copies of the combined experiments circuit
+# Utilize roughly 80% of the machine to accommodate broken connections between qubits and topology
+num_qubits = 8 * ((backend.num_qubits // 5 * 4) // 8)
 
-circ_combined.draw('mpl')
-plt.show()
+circ_real = QuantumCircuit()
+
+for i in range(0, num_qubits, 8):
+    for j, view in enumerate(views):
+        # Create unique register names for each experiment copy
+        qreg_name = f'q{i + j * 2}'
+        creg_name = f'c{i + j * 2}'
+
+        # Create a fresh Bell circuit with unique register names
+        experiment_circuit = MeasureWithView(BellCircuit(qreg_name, creg_name), view)
+
+        # Add the registers to the real circuit
+        circ_real.add_register(experiment_circuit.qregs[0])
+        circ_real.add_register(experiment_circuit.cregs[0])
+
+        # Determine the qubit and clbit indices in circ_real where to compose the experiment
+        qubit_indices = list(range(i + j * 2, i + j * 2 + 2))  # 2 qubits per experiment
+        clbit_indices = list(range(i + j * 2, i + j * 2 + 2))  # 2 classical bits per experiment
+
+        # Compose the experiment circuit into circ_real at the specified indices
+        circ_real.compose(
+            experiment_circuit,
+            qubits=qubit_indices,
+            clbits=clbit_indices,
+            inplace=True
+        )
+
+# Optional: Draw the real circuit to verify (commented out to avoid large plots)
+# circ_real.draw('mpl')
+# plt.show()
 
 # Adjust num_repeats based on the backend's qubit count
 circuit_qubits = circ_combined.num_qubits
