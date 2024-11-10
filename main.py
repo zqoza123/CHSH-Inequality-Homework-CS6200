@@ -399,6 +399,125 @@ print("real_counts:", real_counts)
 # Plot the results
 PlotCircuitResults(real_counts)
 
-#ADD CODE
 
-# EXTENSION HAS BEEN APPROVED FOR NOVEMBER 10th.
+def ExpectationValue(counts):
+
+    # Calculate the total number of shots
+    total_shots = sum(counts.values())
+
+    if total_shots == 0:
+        raise ValueError("Total number of shots is zero. Cannot compute expectation value.")
+
+    # Compute probabilities for each relevant bitstring
+    P00 = counts.get('00', 0) / total_shots
+    P11 = counts.get('11', 0) / total_shots
+    P01 = counts.get('01', 0) / total_shots
+    P10 = counts.get('10', 0) / total_shots
+
+    # Calculate the expectation value using the CHSH formula
+    expectation = P00 + P11 - P01 - P10
+
+    return expectation
+
+# --- Calculating Expectation Values from the Ideal Simulator ---
+
+# Initialize a dictionary to store expectation values
+ideal_expectation = {}
+
+# Iterate over each view and compute the expectation value
+for view in views:
+    counts = ideal_counts.get(view, {})
+    expectation = ExpectationValue(counts)
+    ideal_expectation[view] = expectation
+    print(f"Expectation value for {view} (Ideal Simulator): {expectation:.4f}")
+
+print("\n")  # Add space between sections
+
+# --- Calculating Expectation Values from the Noisy Simulator ---
+
+# Initialize a dictionary to store expectation values
+noisy_expectation = {}
+
+# Iterate over each view and compute the expectation value
+for view in views:
+    counts = noisy_counts.get(view, {})
+    expectation = ExpectationValue(counts)
+    noisy_expectation[view] = expectation
+    print(f"Expectation value for {view} (Noisy Simulator): {expectation:.4f}")
+
+print("\n")  # Add space between sections
+
+# --- Calculating Expectation Values from the IBM Quantum Computer ---
+
+# Initialize a dictionary to store expectation values
+real_expectation = {}
+
+# Iterate over each view and compute the expectation value
+for view in views:
+    counts = real_counts.get(view, {})
+    expectation = ExpectationValue(counts)
+    real_expectation[view] = expectation
+    print(f"Expectation value for {view} (IBM Quantum Computer): {expectation:.4f}")
+
+
+# --- Part 2: Calculating ⟨CHSH⟩ ---
+
+# Function to calculate CHSH value
+def CHSHValue(ev):
+    """
+    Calculate the CHSH value from the expectation values.
+
+    Args:
+        ev (dict): A dictionary with expectation values for each view.
+                   Example: {'AB': 1.0, 'Ab': 1.0, 'aB': 1.0, 'ab': 1.0}
+
+    Returns:
+        float: The CHSH value ⟨CHSH⟩.
+    """
+    try:
+        # Extract expectation values for each view
+        AB = ev.get('AB', 0)
+        Ab = ev.get('Ab', 0)
+        aB = ev.get('aB', 0)
+        ab = ev.get('ab', 0)
+
+        # Calculate CHSH value using the formula
+        CHSH = AB + Ab + aB - ab
+
+        return CHSH
+    except Exception as e:
+        print(f"Error calculating CHSH value: {e}")
+        return None
+
+
+# --- Calculating ⟨CHSH⟩ from Jobs ran on an Ideal Simulator ---
+
+# Calculate the CHSH value using the expectation values from the Ideal Simulator
+ideal_CHSH = CHSHValue(ideal_expectation)
+
+# Print the CHSH value and whether the inequality is violated
+print(f"CHSH Value from Ideal Simulator: {ideal_CHSH:.4f}")
+print(f"CHSH Inequality Violated: {ideal_CHSH > 2}")
+
+print("\n")  # Add space between sections
+
+# --- Calculating ⟨CHSH⟩ from Jobs ran on a Noisy Simulator ---
+
+# Calculate the CHSH value using the expectation values from the Noisy Simulator
+noisy_CHSH = CHSHValue(noisy_expectation)
+
+# Print the CHSH value and whether the inequality is violated
+print(f"CHSH Value from Noisy Simulator: {noisy_CHSH:.4f}")
+print(f"CHSH Inequality Violated: {noisy_CHSH > 2}")
+
+print("\n")  # Add space between sections
+
+# --- Calculating ⟨CHSH⟩ from Jobs ran on an IBM Quantum Computer ---
+
+# Calculate the CHSH value using the expectation values from the IBM Quantum Computer
+real_CHSH = CHSHValue(real_expectation)
+
+# Print the CHSH value and whether the inequality is violated
+print(f"CHSH Value from IBM Quantum Computer: {real_CHSH:.4f}")
+print(f"CHSH Inequality Violated: {real_CHSH > 2}")
+
