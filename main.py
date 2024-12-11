@@ -3,7 +3,6 @@ import numpy as np
 
 # Plotting routines
 import matplotlib.pyplot as plt
-from collections import defaultdict
 
 # Qiskit imports
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -15,8 +14,7 @@ from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel
 
 # Qiskit Runtime imports
-from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, SamplerOptions
-from qiskit.providers.jobstatus import JobStatus
+from qiskit_ibm_runtime import QiskitRuntimeService, Session, SamplerV2 as Sampler, SamplerOptions
 
 def BellCircuit(qreg_name='q', creg_name='c') -> QuantumCircuit:
     qreg_q = QuantumRegister(2, qreg_name)
